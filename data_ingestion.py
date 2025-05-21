@@ -1,6 +1,3 @@
-# -------------------------
-# File: data_ingestion.py
-# -------------------------
 import yfinance as yf
 import pandas as pd
 

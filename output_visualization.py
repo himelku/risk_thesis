@@ -1,6 +1,3 @@
-# -------------------------------
-# File: output_visualization.py
-# -------------------------------
 import pandas as pd
 import plotly.express as px
 
@@ -65,6 +62,15 @@ class Visualizer:
     def display_metrics_table(self, var_results):
         df_metrics = pd.DataFrame(var_results).T
         df_metrics.index.name = "Model"
+        # Format percentage-type columns
+        for col in df_metrics.columns:
+            if any(
+                metric in col.lower()
+                for metric in ["var", "es", "volatility", "drawdown"]
+            ):
+                df_metrics[col] = df_metrics[col].apply(lambda x: f"{x * 100:.2f}%")
+            elif "sharpe" in col.lower():
+                df_metrics[col] = df_metrics[col].apply(lambda x: f"{x:.2f}")
         return df_metrics
 
     def generate_interpretation(self, model_name, metrics, horizon=1, confidence=0.95):

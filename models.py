@@ -1,5 +1,5 @@
-# models.py
 import numpy as np
+from arch import arch_model
 
 
 # Base class for risk models
@@ -81,40 +81,23 @@ class EWMAModel(RiskModelBase):
         return {"volatility": sigma_horizon}
 
 
-class GARCHModel(RiskModelBase):
-    """
-    GARCH(1,1) model for volatility forecasting.
-    In an actual implementation, we would fit a GARCH model to the return series and forecast future volatility.
-    Here, we provide a structure and a placeholder for integration with a GARCH library (e.g., 'arch').
-    """
+from arch import arch_model
 
-    def __init__(self, price_data, indicator_data=None):
+
+class GARCHModel(RiskModelBase):
+    def __init__(self, price_data, indicator_data=None, model_type="GARCH", p=1, q=1):
         super().__init__(price_data, indicator_data)
-        # Additional parameters for GARCH can be added here (p, q orders, etc.)
-        # For simplicity, we'll use a standard GARCH(1,1) assumption.
+        self.model_type = model_type
+        self.p = p
+        self.q = q
 
     def forecast(self, horizon=1):
-        """
-        Forecast volatility using a GARCH(1,1) model. If a GARCH library is available, use it to fit and forecast.
-        Otherwise, use a placeholder approach (e.g., sample standard deviation) for demonstration.
-        Returns a dictionary with the forecast volatility.
-        """
-        # Placeholder for actual GARCH fitting:
-        # In practice, one would use a library like 'arch' to fit a GARCH(1,1) model to self.returns.
-        # Example (if the 'arch' package is installed):
-        # from arch import arch_model
-        # am = arch_model(self.returns * 100, vol='Garch', p=1, q=1, mean='constant', dist='normal')
-        # res = am.fit(disp='off')
-        # forecast = res.forecast(horizon=horizon)
-        # predicted_var = forecast.variance.values[-1, -1]  # variance for last period of horizon
-        # sigma_1day = np.sqrt(predicted_var) / 100  # convert back to percentage if we scaled returns
-        # sigma_horizon = sigma_1day * np.sqrt(horizon)
-        # return {'volatility': sigma_horizon}
-        #
-        # Since we cannot perform actual GARCH fitting here, we'll use a simple fallback:
-        sigma_1day = np.std(
-            self.returns
-        )  # sample standard deviation as a crude estimate
+        returns_scaled = self.returns * 100
+        model = arch_model(returns_scaled, vol=self.model_type, p=self.p, q=self.q)
+        result = model.fit(disp="off")
+        forecast = result.forecast(horizon=horizon)
+        predicted_var = forecast.variance.values[-1, -1]
+        sigma_1day = np.sqrt(predicted_var) / 100
         sigma_horizon = sigma_1day * np.sqrt(horizon)
         return {"volatility": sigma_horizon}
 
